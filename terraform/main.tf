@@ -31,3 +31,39 @@ resource "aws_sqs_queue" "pedidos" {
   receive_wait_time_seconds = 10
   sqs_managed_sse_enabled   = true
 }
+
+
+resource "aws_iam_role" "productor" {
+  name = "${var.prefix}-role-productor"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+
+resource "aws_iam_role_policy" "enviar_a_cola" {
+  name = "${var.prefix}-policy-sqs-send"
+  role = aws_iam_role.productor.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid      = "SoloEnviarALaColaDelReto"
+      Effect   = "Allow"
+      Action   = "sqs:SendMessage"
+      Resource = aws_sqs_queue.pedidos.arn
+    }]
+  })
+}
+
+
+resource "aws_iam_instance_profile" "productor" {
+  name = "${var.prefix}-profile-productor"
+  role = aws_iam_role.productor.name
+}
