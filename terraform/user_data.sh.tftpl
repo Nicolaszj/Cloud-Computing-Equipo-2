@@ -1,0 +1,16 @@
+#!/bin/bash
+# Reto Terraform Cafe Luna: al arrancar, la EC2 envia un pedido de prueba a SQS con su IAM Role.
+LOG=/var/log/cafeluna-tf.log
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+
+for intento in 1 2 3 4 5 6; do
+  if OUT=$(aws sqs send-message --region ${region} --queue-url ${queue_url} \
+      --message-body "pedido-prueba-terraform instance=$INSTANCE_ID utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>&1); then
+    echo "OK intento $intento: $OUT" | tee -a $LOG
+    exit 0
+  fi
+  echo "Fallo intento $intento: $OUT" | tee -a $LOG
+  sleep 10
+done
+echo "ERROR: no se pudo enviar el mensaje" | tee -a $LOG
