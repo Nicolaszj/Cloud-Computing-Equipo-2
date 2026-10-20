@@ -23,3 +23,11 @@ data "aws_ami" "al2023" {
     values = ["al2023-ami-2023.*-x86_64"]
   }
 }
+
+
+resource "aws_sqs_queue" "pedidos" {
+  name                      = "${var.prefix}-pedidos"
+  message_retention_seconds = 86400
+  receive_wait_time_seconds = 10
+  sqs_managed_sse_enabled   = true
+}
