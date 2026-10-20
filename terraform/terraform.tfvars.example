@@ -1,0 +1,3 @@
+# Ejemplo del terraform.tfvars
+vpc_name    = "cafeluna-vpc"
+subnet_name = "cafeluna-subnet-publica-a"
